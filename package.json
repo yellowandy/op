@@ -23,7 +23,8 @@
     "sails": "~0.12.11",
     "sails-disk": "~0.10.9",
     "sails-mysql": "*",
-    "optimist":"*"
+    "optimist":"*",
+    "eventsource": "*"
   },
   "scripts": {
     "debug": "node debug app.js",

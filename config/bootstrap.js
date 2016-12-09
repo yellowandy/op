@@ -14,9 +14,10 @@ module.exports.bootstrap = function(cb) {
   //Let us run the parser service only once from the command line
   if(require('optimist').argv.disableMonitorService) {
     sails.log.info("Monitor Import Service Has Been Disabled");
+  }
+  else {
     var importer = new ImportService;
-    importer.start();
-
+    importer.startImporter();
   }
 
   // It's very important to trigger this callback method when you are finished

@@ -9,7 +9,7 @@ module.exports = {
 
   attributes: {
 
-    guid: {
+    authorId: {
       type: 'string',
       required: true,
       unique: false

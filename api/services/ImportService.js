@@ -1,7 +1,6 @@
 "use strict";
 
-var async = require('async');
-
+var EventSource = require('eventsource');
 
 /**
  *
@@ -12,13 +11,6 @@ class ImportService {
      *
      */
     constructor() {
-
-        this.rssList = arrayList;
-
-        this._FeedParser = require('feedparser');
-
-        this._request = require('request');
-
     }
 
     /**
@@ -27,8 +19,9 @@ class ImportService {
      * @returns {{guid: *, authorName: *, message: *, published_date: *}}
      */
     messageObjectFromServerEntry(row) {
+
         return {
-            guid: row[1],
+            authorId: row[1],
             authorName: row[2],
             message: row[3],
             published_date: row[4],
@@ -42,22 +35,36 @@ class ImportService {
      */
     createMessagesFromResponse(resp) {
 
-        _.each(resp.M, function (tmpMessage){
+        var that = this;
+        try{
+            var data= JSON.parse(resp);
 
-            var messagObject = that.messageObjectFromServerEntry(tmpMessage.M);
-            Episode.create(messagObject).exec(function (err, episode) {
+            if(!resp || !data.M) {
+                sails.log.info("Couldn't find messages in array, skipping");
+            }
+            _.each(data.M, function (tmpMessage){
 
-                if(err) {
-                    sails.log("Error creating message: ");
-                    console.log(err);
+                if(tmpMessage.M && tmpMessage.M == 'userList') {
+                    console.log("Found user list, ignoring");
+                    return;
                 }
-                else {
-                    sails.log("Created message!");
-                    console.log(err);
-                }
+                var messagObject = that.messageObjectFromServerEntry(tmpMessage.A);
+
+                Message.create(messagObject).exec(function (err, episode) {
+
+                    if(err) {
+                        sails.log("Error creating message: ");
+                        console.log(err);
+                    }
+                    else {
+                        sails.log("Created message!");
+                    }
+                });
             });
-        });
 
+        }
+        catch(e){console.log(e)}
+        return;
     }
 
     /**
@@ -97,8 +104,8 @@ class ImportService {
         });
 
         es.addEventListener('message', function (e) {
-            console.log(e.data);
-            that.createMessagesFromResponse();
+            sails.log.info("Message received: " + e.data);
+            that.createMessagesFromResponse(e.data);
         });
     }
 }
