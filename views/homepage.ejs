@@ -31,6 +31,7 @@
         <ul class="nav nav-tabs">
             <li role="presentation" class="active"><a data-toggle="tab" href="#home">Home</a></li>
             <li role="presentation"><a data-toggle="tab" href="#importantlist">Important List</a></li>
+            <li role="presentation"><a data-toggle="tab" href="#favoriteList">Favorites</a></li>
         </ul>
 
         <div class="tab-content">
@@ -48,17 +49,20 @@
                         <h2>Chat</h2>
                         <table class="table table-striped">
                             <tbody style="overflow: auto;height: 200px;">
-                                <tr ng-repeat="message in messages" ng-class="(message.isImportant == true) ? 'success' : ''" >
+                                <tr ng-repeat="message in messages|orderBy:'createdAt':false" ng-class="(message.isImportant == true) ? 'success' : ''" >
 
                                     <td ng-sanitize>
 
                                         <img width="50" height="50" src="https://optionsplayers.com{{message.authorAvatarUrl}}">
                                         <br>
-                                        {{ message.authorName }}
+                                        {{ message.authorName }} {{ message.id }}
                                     </td>
                                     <td valign="center" ng-bind-html="message.message"> </td>
                                     <td valign="center" >
-                                        {{ message.createdAt }}
+                                        {{ message.createdSince }}
+                                        <br>
+                                        <img height="20px" width="20px" src="/images/star.png" data="{{message.id}}" ng-click="markFavorite(message.id, true)" ng-hide="message.is_favorite">
+                                        <img height="20px" width="20px" src="/images/favoritesOn.png" data="{{message.id}}" ng-click="markFavorite(message.id, false)" ng-hide="!message.is_favorite">
                                     </td>
                                 </tr>
                             </tbody>
@@ -84,6 +88,26 @@
                     </table>
                 </div>
             </div>
+            <div id="favoriteList" class="tab-pane fade">
+                <div class="col-lg-10">
+                    <table class="table table-striped">
+                        <tr ng-repeat="message in favoriteMessageList" ng-class="(message.isImportant == true) ? 'success' : ''" >
+                            <td ng-sanitize>
+
+                                <img width="50" height="50" src="https://optionsplayers.com{{message.authorAvatarUrl}}">
+                                <br>
+                                {{ message.authorName }}
+                            </td>
+                            <td valign="center" ng-bind-html="message.message"> </td>
+                            <td valign="center" >
+                                {{ message.createdAt }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+
         </div>
     </div>
 
@@ -106,9 +130,16 @@
 
     var mainApp = angular.module("mainApp", ['ngSanitize']);
 
-    mainApp.controller('messageController', function($scope) {
+    mainApp.controller('messageController',['$scope', '$http', function($scope, $http) {
         $scope.messages = <%- JSON.stringify(messages) %>;
-        $scope.favoriteList = <%- JSON.stringify(favoritelist) %>;
+        $scope.favoritePersonIdlist = <%- JSON.stringify(favoritePersonIdlist) %>;
+        $scope.favoriteMessageList = <%- JSON.stringify(favoriteMessageList) %>;
+
+        $scope.decodeHTML = function(html){
+            var txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        }
         $scope.userList = ['john'];
         console.log("Gonna subscribe to new messages!");
         io.socket.get('/messages/subscribe', function(data, jwr) {
@@ -125,7 +156,7 @@
             io.socket.on('add', function(newMessage) {
                 console.log("Received new message");
                 console.log(newMessage);
-                if( _.contains($scope.favoriteList, newMessage.authorId)) {
+                if( _.contains($scope.favoritePersonIdlist, newMessage.authorId)) {
                     $scope.sendNotification(newMessage.id, newMessage.authorName, newMessage.message);
                     newMessage.isImportant = true;
                 }
@@ -140,7 +171,7 @@
                 else {
                     var notification = new Notification(title, {
                         icon: 'http://www.freeiconspng.com/uploads/money-icon-29.png',
-                        body: message,
+                        body: $scope.decodeHTML(message),
                     });
 
                     notification.onclick = function () {
@@ -150,7 +181,28 @@
                 }
         }
 
-    });
+        $scope.markFavorite = function(id, isFavorite){
+
+            var message = _.find( $scope.messages, function(tmpMessage){ return tmpMessage.id == id });
+            message.is_favorite=!message.is_favorite;
+
+            //$scope.$apply();
+            console.log("Marking as fav:"+isFavorite);
+            $http({
+                method: 'GET',
+                url: '/favorite/'+id + '?v=' + isFavorite
+            }).then(function successCallback(response) {
+              console.log('good');
+                // this callback will be called asynchronously
+                // when the response is available
+            }, function errorCallback(response) {
+                console.log('bad');
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
+            });
+        }
+
+    }]);
 </script>
 
 </body>

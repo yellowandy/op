@@ -65,7 +65,7 @@ class ImportService {
                         }
                         else {
                             sails.log("Created message!");
-                            message.createdAt = moment(message.createdAt).fromNow();
+                            message.createdSince = moment(message.createdAt).fromNow();
                             sails.sockets.broadcast('message', 'add', message);
                         }
                     });
