@@ -15,6 +15,11 @@ module.exports = {
       unique: false
     },
 
+    authorAvatarUrl: {
+      type: 'string',
+      required: false,
+      unique: false
+    },
     authorName: {
       type: 'string',
       required: true,
@@ -32,7 +37,7 @@ module.exports = {
     },
 
     published_date: {
-      type: 'date',
+      type: 'datetime',
       required: false,
       unique: false
     },

@@ -1,6 +1,8 @@
 "use strict";
 
+var events = require('events');
 var EventSource = require('eventsource');
+var moment = require('moment');
 
 /**
  *
@@ -25,6 +27,7 @@ class ImportService {
             authorName: row[2],
             message: row[3],
             published_date: row[4],
+            authorAvatarUrl: row[5]
         }
     }
 
@@ -45,21 +48,28 @@ class ImportService {
             _.each(data.M, function (tmpMessage){
 
                 if(tmpMessage.M && tmpMessage.M == 'userList') {
-                    console.log("Found user list, ignoring");
+                    console.log("Found user list...");
+                    console.log(tmpMessage.A[0]);
+                    sails.sockets.broadcast('message', 'userList', tmpMessage);
                     return;
                 }
                 var messagObject = that.messageObjectFromServerEntry(tmpMessage.A);
 
-                Message.create(messagObject).exec(function (err, episode) {
+                if(tmpMessage.M && tmpMessage.M == 'broadcastMessage') {
 
-                    if(err) {
-                        sails.log("Error creating message: ");
-                        console.log(err);
-                    }
-                    else {
-                        sails.log("Created message!");
-                    }
-                });
+                    Message.create(messagObject).exec(function (err, message) {
+
+                        if(err) {
+                            sails.log("Error creating message: ");
+                            console.log(err);
+                        }
+                        else {
+                            sails.log("Created message!");
+                            message.createdAt = moment(message.createdAt).fromNow();
+                            sails.sockets.broadcast('message', 'add', message);
+                        }
+                    });
+                }
             });
 
         }
@@ -75,6 +85,12 @@ class ImportService {
     startImporter(rrsFeedUrl, rssFeedCompletionCallback){
         sails.log.info("Starting to listen and import messages");
 
+        //setInterval(function(){
+        //
+        //    console.log("Sending new message");
+        //    sails.sockets.broadcast('message', 'add', {id:69,authorId: '5eae7745-5b6f-4261-af61-f5d7ef1b61fe',authorName:'andy',message:'weed!', isImportant:true});
+        //
+        //},30000);
         var that = this;
         var options = {
             headers: {

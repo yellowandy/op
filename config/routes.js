@@ -32,10 +32,9 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/': {
-    view: 'homepage'
-  }
-
+  '/': 'MessageController.homepage',
+  '/messages/subscribe': 'MessageController.messageSubscribe',
+  '/notification/:id': 'MessageController.notification'
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *
