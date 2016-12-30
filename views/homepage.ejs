@@ -23,50 +23,103 @@
 
 <body>
 
+<style>
+
+    .table-fixed thead {
+        width: 97%;
+    }
+    .table-fixed tbody {
+        height: 1230px;
+        overflow-y: auto;
+        width: 100%;
+    }
+    .table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
+        display: block;
+    }
+    .table-fixed tbody td, .table-fixed thead > tr> th {
+        float: left;
+        border-bottom-width: 0;
+    }
+</style>
 <div class="container">
 
     <div ng-app="mainApp" ng-controller="messageController">
         <h1>Op Chat</h1>
 
+        Show messages: <input type="checkbox" ng-model="shouldSendNotification">
         <ul class="nav nav-tabs">
             <li role="presentation" class="active"><a data-toggle="tab" href="#home">Home</a></li>
             <li role="presentation"><a data-toggle="tab" href="#importantlist">Important List</a></li>
             <li role="presentation"><a data-toggle="tab" href="#favoriteList">Favorites</a></li>
+            <li role="presentation"><a data-toggle="tab" href="#stockMentions">Stock Mentions</a></li>
         </ul>
 
         <div class="tab-content">
             <div id="home" class="tab-pane fade in active">
                 <div class="row">
-                    <div class="col-lg-2">
-                        <h2>User List</h2>
-                        <table class="table table-striped">
-                            <tr ng-repeat="user in userList">
-                                <td ng-sanitize>{{user}}</td>
-                            </tr>
-                        </table>
+                    <div class="col-xlg-2">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                ONLINE USERS
+                            </div>
+                            <div class="panel-body">
+                                <ul class="media-list">
+
+                                    <li class="media" ng-repeat="user in userList">
+                                        <div class="media-body">
+
+                                            <div class="media">
+                                                <a class="pull-left" href="#">
+                                                    <img class="media-object img-circle" style="max-height:40px;" src="assets/img/user.png">
+                                                </a>
+                                                <div class="media-body">
+                                                    <h5>{{user}}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-lg-10" style="border-left: 1px dashed blue">
-                        <h2>Chat</h2>
-                        <table class="table table-striped">
-                            <tbody style="overflow: auto;height: 200px;">
-                                <tr ng-repeat="message in messages|orderBy:'createdAt':false" ng-class="(message.isImportant == true) ? 'success' : ''" >
+                    <div class="col-xlg-10" style="border-left: 1px dashed blue">
 
-                                    <td ng-sanitize>
+                        <div id="mainChatWindow" class="panel panel-info" style="height: 1000px;overflow:auto;">
+                            <div class="panel-heading">
+                                RECENT CHAT HISTORY
+                            </div>
+                            <div class="panel-body">
+                                <ul class="media-list" ng-repeat="message in messages|orderBy:'createdAt':false" ng-class="(message.isImportant == true) ? 'success' : ''">
 
-                                        <img width="50" height="50" src="https://optionsplayers.com{{message.authorAvatarUrl}}">
-                                        <br>
-                                        {{ message.authorName }} {{ message.id }}
-                                    </td>
-                                    <td valign="center" ng-bind-html="message.message"> </td>
-                                    <td valign="center" >
-                                        {{ message.createdSince }}
-                                        <br>
-                                        <img height="20px" width="20px" src="/images/star.png" data="{{message.id}}" ng-click="markFavorite(message.id, true)" ng-hide="message.is_favorite">
-                                        <img height="20px" width="20px" src="/images/favoritesOn.png" data="{{message.id}}" ng-click="markFavorite(message.id, false)" ng-hide="!message.is_favorite">
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    <li class="media">
+
+                                        <div class="media-body">
+
+                                            <div class="media">
+                                                <a class="pull-left" href="#">
+                                                    <img height="50px" width="50px" class="media-object img-circle " src="https://optionsplayers.com{{message.authorAvatarUrl}}" />
+                                                </a>
+                                                <div class="media-body">
+                                                    <span ng-bind-html="message.message" style="font-size: 2em;"></span>
+                                                    <br />
+                                                    <medium class="text-muted">{{ message.authorName }} | {{ message.createdSince }}</medium>
+                                                    <hr />
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="panel-footer">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Enter Message" />
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-info" type="button">SEND</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -106,7 +159,17 @@
                     </table>
                 </div>
             </div>
-
+            <div id="stockMentions" class="tab-pane fade">
+                <div class="col-lg-10">
+                    <table class="table table-striped">
+                        <tr ng-repeat="ticker in stockMentionsList"  >
+                            <td>
+                                {{ ticker.symbol }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -115,6 +178,12 @@
 </div>
 
 <script>
+
+    $( document ).ready(function() {
+
+        $("#mainChatWindow").animate({ scrollTop: $('#mainChatWindow').prop("scrollHeight")}, 200);
+    });
+
 
     // request permission on page load
     document.addEventListener('DOMContentLoaded', function () {
@@ -134,10 +203,14 @@
         $scope.messages = <%- JSON.stringify(messages) %>;
         $scope.favoritePersonIdlist = <%- JSON.stringify(favoritePersonIdlist) %>;
         $scope.favoriteMessageList = <%- JSON.stringify(favoriteMessageList) %>;
+        $scope.stockMentionsList = <%- JSON.stringify(stockMentionsList) %>;
+        $scope.shouldSendNotification = true;
 
         $scope.decodeHTML = function(html){
+            console.log("Decoding html " + html);
             var txt = document.createElement("textarea");
             txt.innerHTML = html;
+            console.log('decorder returning' + txt.value);
             return txt.value;
         }
         $scope.userList = ['john'];
@@ -157,11 +230,15 @@
                 console.log("Received new message");
                 console.log(newMessage);
                 if( _.contains($scope.favoritePersonIdlist, newMessage.authorId)) {
-                    $scope.sendNotification(newMessage.id, newMessage.authorName, newMessage.message);
+                    if($scope.shouldSendNotification) {
+                        $scope.sendNotification(newMessage.id, newMessage.authorName, newMessage.message);
+                    }
+
                     newMessage.isImportant = true;
                 }
                 $scope.messages.push(newMessage);
                 $scope.$apply();
+                //$("#mainChatWindow").animate({ scrollTop: $('#mainChatWindow').prop("scrollHeight")}, 0);
             });
         });
 

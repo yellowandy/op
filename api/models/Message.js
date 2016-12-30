@@ -42,6 +42,11 @@ module.exports = {
       unique: false
     },
 
+    // Add a reference to User
+    mentions: {
+      collection: 'ticker',
+      via: 'messages'
+    }
   }
 };
 

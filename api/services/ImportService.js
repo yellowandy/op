@@ -31,6 +31,37 @@ class ImportService {
         }
     }
 
+    createLinkToTickerSymbols(messageObject) {
+
+        var tickerSymbolsFound = messageObject.message.match(/\$?([A-Z]{2,5})/g);
+        _.each(tickerSymbolsFound, function(ticker){
+
+            console.log("Starting to create links to ticker symbol: " + ticker);
+            Ticker.findOne({
+                symbol: ticker
+            }).exec(function (err, tickerObject){
+                if (err) {
+                    console.log("Unable to search for ticker");
+                    console.log(err);
+                }
+                if (!tickerObject) {
+                    console.log("Couldn't find ticker, creating and linking");
+                    messageObject.mentions.add({symbol:ticker});
+                }
+                else {
+                    console.log("***** FOUND TICKER SYMBOL: " +  tickerObject.symbol);
+                    messageObject.mentions.add(tickerObject.id);
+                }
+
+                return messageObject.save(function(err){
+                    if(err) console.log(err);
+                    else console.log("Saving message with association");
+                });
+
+            });
+        });
+
+    }
     /**
      *
      * @param resp
@@ -49,13 +80,15 @@ class ImportService {
 
                 if(tmpMessage.M && tmpMessage.M == 'userList') {
                     console.log("Found user list...");
-                    console.log(tmpMessage.A[0]);
+                    //console.log(tmpMessage.A[0]);
                     sails.sockets.broadcast('message', 'userList', tmpMessage);
                     return;
                 }
                 var messagObject = that.messageObjectFromServerEntry(tmpMessage.A);
 
                 if(tmpMessage.M && tmpMessage.M == 'broadcastMessage') {
+
+                    //See if there are any stock references
 
                     Message.create(messagObject).exec(function (err, message) {
 
@@ -67,6 +100,11 @@ class ImportService {
                             sails.log("Created message!");
                             message.createdSince = moment(message.createdAt).fromNow();
                             sails.sockets.broadcast('message', 'add', message);
+
+                            //Create any ticker links if needed
+                            that.createLinkToTickerSymbols(message);
+                            //See if we have any
+
                         }
                     });
                 }
@@ -103,14 +141,13 @@ class ImportService {
 
         var eventSourceInitDict = {
             headers: {
-                'Cookie': '__cfduid=d9b0a0656daeba6cfdd1591ce54f58e8c1481149411; __RequestVerificationToken=m1okNxZGbZbNEBJEiH7j8rcqyaHyIMeHG4CW2BLVjbkEiDAqwieUVxQlTIPUmtDJbXuicqJAzMy8erAxWqMTUoW_kr7MuP2CkHDlhPgHlRU1; opmybb[lastvisit]=1481150149; opmybb[lastactive]=1481150180; oploginattempts=1; opsid=ea5040b07189ad59c9d5ca50ac0f7c10; opmybbuser=410_fsvOiB1mmofkeo6; opcollapsed=; .AspNet.ApplicationCookie=Tu9VtTocQ2xFJ4Z70Norpuy8uc-TbuPzgEf3oYvS5WXfNMGfBEBzD2-6poeTjurFDCMzZSTFVgvkqJyFXY36mLLCSExi7AUjUwQtK1iE6TOIQpLvS0cy8FrualXGFuMQu5MtKisoZrp81Sv3dIqzPfZxI6tHUNgd8wnPbc1jeGrfMnJMFZzfg4kd-IlhMP7CefWE1koZS4tgW4oBYoha5TYC1iDKCumogvoM5_ka1EpqPbzCHC_5vfw0NaTsZwUvFFUEOYEFw_RTIR85GM2AVqozIpDnpnbNpMIUEmMNCNqJoyg04tqEEflBOq_D7T_efxFyVEaK9DbZ99ZBb443GYcnfZzricBD5fZxuEOCzrJTI13Rk6jFYrU-iJ0rZxIDZ50lnGIYBa4U13nel-q-0X7fIn40M3xgbV2RmELS3b6qhPtrCGdIo5yLZNgUN25TC4JxIh12-24NjeiROOweYJz9_ZssdQARSo3oB4UKV4dN4SgVvc2sGZqCC30J-TiShYwZD9-lOhXQZbVbgt0Evw; _gat=1; _ga=GA1.2.1319706048.1481149413'
+                'Cookie': '__cfduid=d9b0a0656daeba6cfdd1591ce54f58e8c1481149411; __RequestVerificationToken=m1okNxZGbZbNEBJEiH7j8rcqyaHyIMeHG4CW2BLVjbkEiDAqwieUVxQlTIPUmtDJbXuicqJAzMy8erAxWqMTUoW_kr7MuP2CkHDlhPgHlRU1; opmybb[lastvisit]=1481150149; opmybb[lastactive]=1481150180; oploginattempts=1; opmybbuser=410_fsvOiB1mmofkeo6; opcollapsed=; opsid=5e8626fe71f9e81e2b57c3d7bdb8097a; .AspNet.ApplicationCookie=e_CR2LQytTqqEb_eEKaUncoEXZhi6Zbiy0igPsh5Yg5WkerzrT2DWyEh75K1X9L0OysQTYPmHOE2MSWWKhZnZPQzkeOQG5XAa02cQNjdxaKbdBSTqfDAZTaNeeOjkD6JxDLV4Tc8gi2fYMAvAVQcYQVP-o8q59XPXe-2LE_LWmsE7_833KCaBAE4FbR0HruQerDAM448lni_niC1fRQ2Uin1B7tBDbFdz4MhyDykKucaqgSgsS5xmKhZTZ8b9x03RBnxsH2kT1DDI7C2cG8NvB4Sr3dPoVdvY1al5mHZfK8Sp9s1nvWyB7XLbHAGdirh8EEH8N3pR4zT4w2RCdBxFCos-arr8niaFPrm4h4thbfDLqFQBVy9zOR0Ix0yZ5ULAtgBD14VpTYHXFnmJanG5mNzqXRSIIaDh9tGxAVb-5oscYoqrMdaoMGWzBKuJ9BOgl29ZiMbcGJZ0mYc0-wes1Xyqc9HP2od8y4W2Di-f0sbBYQdjovka37ZPTfB75wQo3mjuf-CzdVueqBfe-zSUQ; _gat=1; _ga=GA1.2.1319706048.1481149413'
             }
 
         };
 
         var host = 'https://www.optionsplayers.com';
-        var path = '/signalr/connect?transport=serverSentEvents&clientProtocol=1.4&connectionToken=HfEk9vBG5L70Cw46NaICmj%2FK8BsF4vT6Fg2yQyJG5E6O33kch02B864F%2FwV7L60%2BWMDgw5WFWGd3OGhiVvPiF6tlIfEHZAIB4QeRbsg6MUX51WFDUs6sn24g2ctz%2BG1mWGfHQLKlOKn9Ggw4emNRv%2F%2BjEN%2BGdxsggC5TxGAx07w%3D&connectionData=%5B%7B%22name%22%3A%22chathub%22%7D%5D&tid=9';
-
+        var path = '/signalr/connect?transport=serverSentEvents&clientProtocol=1.4&connectionToken=M0%2BZwFmEeVrN8sLMXKuLklOON1BwxXU1y%2B47TELKlrRZyx87q8hwr1NTpd0rpYzWO6vMGClR%2BxhIBJoMcJXBcJZn7EvuCy%2FZktID1FLpyHWvHAQR8A2FfVeD2jVttG0tX1%2FLp%2FRbWWhNXqrqM9nMP4URZ9rd3ieIMVz8fwiG0Os%3D&connectionData=%5B%7B%22name%22%3A%22chathub%22%7D%5D&tid=5';
         var es = new EventSource(host + path, eventSourceInitDict);
 
 

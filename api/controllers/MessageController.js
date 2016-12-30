@@ -7,7 +7,7 @@
 
 var events = require('events');
 var moment = require('moment');
-var favoritePersonIdlist = ['5eae7745-5b6f-4261-af61-f5d7ef1b61fe', 'b5faa5b0-7255-43d3-9a02-46fdc1bc36a8'];
+var favoritePersonIdlist = ['5eae7745-5b6f-4261-af61-f5d7ef1b61fe', 'b5faa5b0-7255-43d3-9a02-46fdc1bc36a8','7f25f87b-9293-4608-856d-9dec1d95ceb5'];
 
 module.exports = {
 
@@ -43,7 +43,7 @@ module.exports = {
     },
     homepage: function(req, res) {
 
-        Message.find({limit: 25, sort: 'createdAt DESC' }).exec(function (err, messages) {
+        Message.find({limit: 500, sort: 'createdAt DESC' }).exec(function (err, messages) {
 
             _.each(messages, function(message) {
                 message.isImportant = _.contains(favoritePersonIdlist, message.authorId);
@@ -59,11 +59,21 @@ module.exports = {
 
                   });
 
-                  return res.view('homepage', {messages: messages,favoritePersonIdlist:favoritePersonIdlist, favoriteMessageList: favoriteMessageList});
+                  //Get the stock mentions
+                  Ticker.find()
+                    .populate('messages', {
+                      where: {
+                          //color: 'purple'
+                      },
+                      sort: 'symbol DESC'
+                  }).exec(function (err, stockMentionsList){
+                      if (err) {
+                          return res.serverError(err);
+                      }
 
+                      return res.view('homepage', {messages: messages,favoritePersonIdlist:favoritePersonIdlist, favoriteMessageList: favoriteMessageList, stockMentionsList: stockMentionsList});
+                  });
               });
-
-
         });
     },
     /**
