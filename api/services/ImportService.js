@@ -141,7 +141,7 @@ class ImportService {
 
         var eventSourceInitDict = {
             headers: {
-                'Cookie': '__cfduid=d9b0a0656daeba6cfdd1591ce54f58e8c1481149411; __RequestVerificationToken=m1okNxZGbZbNEBJEiH7j8rcqyaHyIMeHG4CW2BLVjbkEiDAqwieUVxQlTIPUmtDJbXuicqJAzMy8erAxWqMTUoW_kr7MuP2CkHDlhPgHlRU1; opmybb[lastvisit]=1481150149; opmybb[lastactive]=1481150180; oploginattempts=1; opmybbuser=410_fsvOiB1mmofkeo6; opcollapsed=; opsid=5e8626fe71f9e81e2b57c3d7bdb8097a; .AspNet.ApplicationCookie=e_CR2LQytTqqEb_eEKaUncoEXZhi6Zbiy0igPsh5Yg5WkerzrT2DWyEh75K1X9L0OysQTYPmHOE2MSWWKhZnZPQzkeOQG5XAa02cQNjdxaKbdBSTqfDAZTaNeeOjkD6JxDLV4Tc8gi2fYMAvAVQcYQVP-o8q59XPXe-2LE_LWmsE7_833KCaBAE4FbR0HruQerDAM448lni_niC1fRQ2Uin1B7tBDbFdz4MhyDykKucaqgSgsS5xmKhZTZ8b9x03RBnxsH2kT1DDI7C2cG8NvB4Sr3dPoVdvY1al5mHZfK8Sp9s1nvWyB7XLbHAGdirh8EEH8N3pR4zT4w2RCdBxFCos-arr8niaFPrm4h4thbfDLqFQBVy9zOR0Ix0yZ5ULAtgBD14VpTYHXFnmJanG5mNzqXRSIIaDh9tGxAVb-5oscYoqrMdaoMGWzBKuJ9BOgl29ZiMbcGJZ0mYc0-wes1Xyqc9HP2od8y4W2Di-f0sbBYQdjovka37ZPTfB75wQo3mjuf-CzdVueqBfe-zSUQ; _gat=1; _ga=GA1.2.1319706048.1481149413'
+                'Cookie': '.AspNet.ApplicationCookie=e_CR2LQytTqqEb_eEKaUncoEXZhi6Zbiy0igPsh5Yg5WkerzrT2DWyEh75K1X9L0OysQTYPmHOE2MSWWKhZnZPQzkeOQG5XAa02cQNjdxaKbdBSTqfDAZTaNeeOjkD6JxDLV4Tc8gi2fYMAvAVQcYQVP-o8q59XPXe-2LE_LWmsE7_833KCaBAE4FbR0HruQerDAM448lni_niC1fRQ2Uin1B7tBDbFdz4MhyDykKucaqgSgsS5xmKhZTZ8b9x03RBnxsH2kT1DDI7C2cG8NvB4Sr3dPoVdvY1al5mHZfK8Sp9s1nvWyB7XLbHAGdirh8EEH8N3pR4zT4w2RCdBxFCos-arr8niaFPrm4h4thbfDLqFQBVy9zOR0Ix0yZ5ULAtgBD14VpTYHXFnmJanG5mNzqXRSIIaDh9tGxAVb-5oscYoqrMdaoMGWzBKuJ9BOgl29ZiMbcGJZ0mYc0-wes1Xyqc9HP2od8y4W2Di-f0sbBYQdjovka37ZPTfB75wQo3mjuf-CzdVueqBfe-zSUQ; _gat=1; _ga=GA1.2.1319706048.1481149413'
             }
 
         };

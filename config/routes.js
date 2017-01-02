@@ -35,7 +35,16 @@ module.exports.routes = {
   '/': 'MessageController.homepage',
   '/messages/subscribe': 'MessageController.messageSubscribe',
   '/notification/:id': 'MessageController.notification',
-  '/favorite/:id': 'MessageController.markFavorite'
+  '/favorite/:id': 'MessageController.markFavorite',
+
+  //USER STUFF
+  'get /login': { view: 'user/login' },
+  '/welcome': { view: 'user/welcome' },
+
+  // Endpoints
+  'post /login': 'UserController.login',
+  '/logout': 'UserController.logout',
+
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *

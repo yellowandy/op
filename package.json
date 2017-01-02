@@ -5,6 +5,8 @@
   "description": "a Sails application",
   "keywords": [],
   "dependencies": {
+    "request": "*",
+    "cheerio": "*",
     "moment": "*",
     "ejs": "2.3.4",
     "grunt": "1.0.1",

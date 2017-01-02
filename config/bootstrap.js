@@ -17,7 +17,7 @@ module.exports.bootstrap = function(cb) {
   }
   else {
     var importer = new ImportService;
-    importer.startImporter();
+    //importer.startImporter();
   }
 
   // It's very important to trigger this callback method when you are finished
