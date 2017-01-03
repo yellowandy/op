@@ -39,11 +39,11 @@ module.exports.routes = {
 
   //USER STUFF
   'get /login': { view: 'user/login' },
-  '/welcome': { view: 'user/welcome' },
 
   // Endpoints
   'post /login': 'UserController.login',
   '/logout': 'UserController.logout',
+  'get /sms/toggle': 'MessageController.toggleSmsSettings'
 
   /***************************************************************************
   *                                                                          *

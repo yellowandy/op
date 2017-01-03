@@ -7,7 +7,6 @@
 
 var events = require('events');
 var moment = require('moment');
-var favoritePersonIdlist = ['5eae7745-5b6f-4261-af61-f5d7ef1b61fe', 'b5faa5b0-7255-43d3-9a02-46fdc1bc36a8','7f25f87b-9293-4608-856d-9dec1d95ceb5'];
 
 module.exports = {
 
@@ -43,10 +42,10 @@ module.exports = {
     },
     homepage: function(req, res) {
 
-        Message.find({limit: 500, sort: 'createdAt DESC' }).exec(function (err, messages) {
+        Message.find({limit: 100, sort: 'createdAt DESC' }).exec(function (err, messages) {
 
             _.each(messages, function(message) {
-                message.isImportant = _.contains(favoritePersonIdlist, message.authorId);
+                message.isImportant = _.contains(sails.config.favoritePersonList, message.authorId);
                 message.createdSince = moment(message.createdAt).fromNow();
 
             });
@@ -54,7 +53,7 @@ module.exports = {
               Message.find({is_favorite: true, sort: 'createdAt ASC' }).exec(function (err, favoriteMessageList) {
 
                   _.each(favoriteMessageList, function(message) {
-                      message.isImportant = _.contains(favoritePersonIdlist, message.authorId);
+                      message.isImportant = _.contains(sails.config.favoritePersonList, message.authorId);
                       message.createdSince = moment(message.createdAt).fromNow();
 
                   });
@@ -71,7 +70,7 @@ module.exports = {
                           return res.serverError(err);
                       }
 
-                      return res.view('homepage', {messages: messages,favoritePersonIdlist:favoritePersonIdlist, favoriteMessageList: favoriteMessageList, stockMentionsList: stockMentionsList});
+                      return res.view('homepage', {messages: messages,favoritePersonIdlist: sails.config.favoritePersonList, favoriteMessageList: favoriteMessageList, stockMentionsList: stockMentionsList});
                   });
               });
         });
@@ -94,6 +93,14 @@ module.exports = {
         sails.sockets.join(req, 'message');
 
         return res.ok();
+    },
+
+    toggleSmsSettings: function(req, res) {
+
+        sails.log.info("Toggling SMS Setting: " + sails.config.smsEnabled);
+        sails.config.smsEnabled = !sails.config.smsEnabled;
+        sails.log.info("New SMS Setting: " + sails.config.smsEnabled);
+        res.json({ value: sails.config.smsEnabled });
     }
 	
 };

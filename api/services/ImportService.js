@@ -4,6 +4,7 @@ var events = require('events');
 var EventSource = require('eventsource');
 var moment = require('moment');
 
+var eventSourceConnection = null;
 /**
  *
  */
@@ -12,7 +13,8 @@ class ImportService {
     /**
      *
      */
-    constructor() {
+    constructor(cookie) {
+        this.cookie = cookie;
     }
 
     /**
@@ -101,6 +103,7 @@ class ImportService {
                             message.createdSince = moment(message.createdAt).fromNow();
                             sails.sockets.broadcast('message', 'add', message);
 
+                            that.sendSMSNotification(message);
                             //Create any ticker links if needed
                             that.createLinkToTickerSymbols(message);
                             //See if we have any
@@ -115,13 +118,49 @@ class ImportService {
         return;
     }
 
+    sendSMSNotification(message){
+
+        console.log("going to see if we should send an SMS notification")
+        if( _.contains(sails.config.favoritePersonList, message.authorId)) {
+            console.log("Found a favorite list, sending txt message");
+            if(sails.config.smsEnabled) {
+                TwilioService.sendMessage(message.message);
+            }
+            else {
+                sails.log.info("SMS SERVICE DISABLED, NOT SENDING: " + message.message)
+            }
+
+        }
+    }
+
+
     /**
      * Parse a specific RSS feed
      * @param rrsFeedUrl The url of the rss feed to parse
      * @param callback The standard nodejs callback
      */
-    startImporter(rrsFeedUrl, rssFeedCompletionCallback){
+    startImporter(){
         sails.log.info("Starting to listen and import messages");
+
+        var that = this;
+        setInterval(function(){
+            sails.log.info("******** RESTARTING SERVICE *********");
+            that.stop();
+            that.createEventSource()
+
+        }, 60 * 60 * 1000); //restart the event source server every 60 minutes
+
+        that.createEventSource();
+    }
+
+
+    /**
+     * Parse a specific RSS feed
+     * @param rrsFeedUrl The url of the rss feed to parse
+     * @param callback The standard nodejs callback
+     */
+    createEventSource(){
+        sails.log.info("-----******-------- Starting to listen and import messages");
 
         //setInterval(function(){
         //
@@ -141,25 +180,34 @@ class ImportService {
 
         var eventSourceInitDict = {
             headers: {
-                'Cookie': '.AspNet.ApplicationCookie=e_CR2LQytTqqEb_eEKaUncoEXZhi6Zbiy0igPsh5Yg5WkerzrT2DWyEh75K1X9L0OysQTYPmHOE2MSWWKhZnZPQzkeOQG5XAa02cQNjdxaKbdBSTqfDAZTaNeeOjkD6JxDLV4Tc8gi2fYMAvAVQcYQVP-o8q59XPXe-2LE_LWmsE7_833KCaBAE4FbR0HruQerDAM448lni_niC1fRQ2Uin1B7tBDbFdz4MhyDykKucaqgSgsS5xmKhZTZ8b9x03RBnxsH2kT1DDI7C2cG8NvB4Sr3dPoVdvY1al5mHZfK8Sp9s1nvWyB7XLbHAGdirh8EEH8N3pR4zT4w2RCdBxFCos-arr8niaFPrm4h4thbfDLqFQBVy9zOR0Ix0yZ5ULAtgBD14VpTYHXFnmJanG5mNzqXRSIIaDh9tGxAVb-5oscYoqrMdaoMGWzBKuJ9BOgl29ZiMbcGJZ0mYc0-wes1Xyqc9HP2od8y4W2Di-f0sbBYQdjovka37ZPTfB75wQo3mjuf-CzdVueqBfe-zSUQ; _gat=1; _ga=GA1.2.1319706048.1481149413'
+                'Cookie': this.cookie
             }
 
         };
 
         var host = 'https://www.optionsplayers.com';
         var path = '/signalr/connect?transport=serverSentEvents&clientProtocol=1.4&connectionToken=M0%2BZwFmEeVrN8sLMXKuLklOON1BwxXU1y%2B47TELKlrRZyx87q8hwr1NTpd0rpYzWO6vMGClR%2BxhIBJoMcJXBcJZn7EvuCy%2FZktID1FLpyHWvHAQR8A2FfVeD2jVttG0tX1%2FLp%2FRbWWhNXqrqM9nMP4URZ9rd3ieIMVz8fwiG0Os%3D&connectionData=%5B%7B%22name%22%3A%22chathub%22%7D%5D&tid=5';
-        var es = new EventSource(host + path, eventSourceInitDict);
+        eventSourceConnection = new EventSource(host + path, eventSourceInitDict);
 
 
-        es.addEventListener('error', function (e) {
+        eventSourceConnection.addEventListener('error', function (e) {
             console.log("error: ");
             console.log(e);
         });
 
-        es.addEventListener('message', function (e) {
+        eventSourceConnection.addEventListener('message', function (e) {
             sails.log.info("Message received: " + e.data);
             that.createMessagesFromResponse(e.data);
         });
+    }
+
+  /**
+   * Stop the service.
+   */
+  stop() {
+      if(eventSourceConnection) {
+          eventSourceConnection.close();
+      }
     }
 }
 

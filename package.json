@@ -5,6 +5,7 @@
   "description": "a Sails application",
   "keywords": [],
   "dependencies": {
+    "twilio": "*",
     "request": "*",
     "cheerio": "*",
     "moment": "*",

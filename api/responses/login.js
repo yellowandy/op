@@ -9,6 +9,8 @@
  */
 var request = require('request');
 var cheerio = require('cheerio')
+var importService = null;
+
 
 module.exports = function login(inputs) {
     console.log("Starting login.....");
@@ -19,10 +21,12 @@ module.exports = function login(inputs) {
 
     inputs = inputs || {};
 
+    var cookieJar = request.jar();
+
     //Try and get the rfresh token
-    request('https://optionsplayers.com/Account/Login', function (error, response, body) {
+    request.get({url: 'https://optionsplayers.com/Account/Login', jar: cookieJar}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            console.log("Trying to parse html");
+            console.log("Scrapping login page for request token");
             var $ = cheerio.load(body);
             var rt = $("input[name=__RequestVerificationToken]").val();
             console.log(rt);
@@ -31,15 +35,41 @@ module.exports = function login(inputs) {
                 Password:inputs.password,
                 RememberMe:'false' // yes string
             };
-            request.post({url:'https://optionsplayers.com/Account/Login', form:formData}, function(err,httpResponse,body){
-                console.log("LOGIN RESPONSE: " + httpResponse);
+
+            console.log(formData);
+
+
+            var url = 'https://optionsplayers.com/Account/Login';
+            request.post({url:url, jar: cookieJar, form:formData}, function(err,httpResponse,body){
+                console.log("Finished logging in " + httpResponse);
                 if(err) {
                     console.log(err);
                     return res.badRequest('Invalid username/password combination.');
                 }
                 else {
-                    console.log(body);
+                    //console.log(body);
+                    var cookieString = cookieJar.getCookieString(url); // "key1=value1; key2=value2; ..."
+                    var cookies = cookieJar.getCookies(url);
+
+                    console.log("***** COOOKIES *******");
+                    console.log(cookieString);
+                    console.log(cookies);
+                    _.each(cookies, function(entry){
+                        if(entry['.AspNet.ApplicationCookie']) {
+                            console.log("THINK WE FOUND ASP COOKIE: " + entry['.AspNet.ApplicationCookie']);
+                        }
+                    })
+                   // console.log(body);
+
                     req.session.me = {'user':'andreas'};
+
+                    if(importService) {
+                        console.log("Found existing service, stoping....");
+                        importService.stop();
+                    }
+                    importService = new ImportService(cookieString);
+                    importService.startImporter();
+
                     return res.redirect(inputs.successRedirect);
                 }
 

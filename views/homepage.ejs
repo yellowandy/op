@@ -41,15 +41,16 @@
         border-bottom-width: 0;
     }
 </style>
-<div class="container">
+<div class="" style="padding-left: 5%;">
 
     <div ng-app="mainApp" ng-controller="messageController">
         <h1>Op Chat</h1>
 
         Show messages: <input type="checkbox" ng-model="shouldSendNotification">
+        Send SMS: <input type="checkbox" ng-model="smsEnabled" ng-click="toggleSmsSettings()">
         <ul class="nav nav-tabs">
             <li role="presentation" class="active"><a data-toggle="tab" href="#home">Home</a></li>
-            <li role="presentation"><a data-toggle="tab" href="#importantlist">Important List</a></li>
+            <li role="presentation"><a data-toggle="tab" href="#importantlist">MVP List</a></li>
             <li role="presentation"><a data-toggle="tab" href="#favoriteList">Favorites</a></li>
             <li role="presentation"><a data-toggle="tab" href="#stockMentions">Stock Mentions</a></li>
         </ul>
@@ -57,7 +58,7 @@
         <div class="tab-content">
             <div id="home" class="tab-pane fade in active">
                 <div class="row">
-                    <div class="col-xlg-2">
+                    <div class="col-lg-2">
                         <div class="panel panel-primary">
                             <div class="panel-heading">
                                 ONLINE USERS
@@ -70,10 +71,10 @@
 
                                             <div class="media">
                                                 <a class="pull-left" href="#">
-                                                    <img class="media-object img-circle" style="max-height:40px;" src="assets/img/user.png">
+                                                    <img class="media-object img-circle" style="max-width:40px;max-height:40px;" src="https://optionsplayers.com{{user.Avatar}}">
                                                 </a>
                                                 <div class="media-body">
-                                                    <h5>{{user}}</h5>
+                                                    <h5> {{user.Name}}</h5>
                                                 </div>
                                             </div>
                                         </div>
@@ -82,7 +83,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xlg-10" style="border-left: 1px dashed blue">
+                    <div class="col-lg-10" style="border-left: 1px dashed blue">
 
                         <div id="mainChatWindow" class="panel panel-info" style="height: 1000px;overflow:auto;">
                             <div class="panel-heading">
@@ -102,7 +103,8 @@
                                                 <div class="media-body">
                                                     <span ng-bind-html="message.message" style="font-size: 2em;"></span>
                                                     <br />
-                                                    <medium class="text-muted">{{ message.authorName }} | {{ message.createdSince }}</medium>
+                                                    <medium class="text-muted">{{ message.authorName }} | {{ message.createdSince }} | <img height="20px" width="20px" src="/images/star.png" data="{{message.id}}" ng-click="markFavorite(message.id, true)" ng-hide="message.is_favorite">
+                                                        <img height="20px" width="20px" src="/images/favoritesOn.png" data="{{message.id}}" ng-click="markFavorite(message.id, false)" ng-hide="!message.is_favorite">  </medium>
                                                     <hr />
                                                 </div>
                                             </div>
@@ -124,39 +126,67 @@
                 </div>
             </div>
             <div id="importantlist" class="tab-pane fade">
-                <div class="col-lg-10">
-                    <table class="table table-striped">
-                        <tr ng-repeat="message in messages | filter:{isImportant: 'true'}" ng-class="(message.isImportant == true) ? 'success' : ''" >
-                            <td ng-sanitize>
 
-                                <img width="50" height="50" src="https://optionsplayers.com{{message.authorAvatarUrl}}">
-                                <br>
-                                {{ message.authorName }}
-                            </td>
-                            <td valign="center" ng-bind-html="message.message"> </td>
-                            <td valign="center" >
-                                {{ message.createdAt }}
-                            </td>
-                        </tr>
-                    </table>
+                <div id="mainChatWindow" class="panel panel-info" style="height: 1000px;overflow:auto;">
+                    <div class="panel-heading">
+                        VIP LIST
+                    </div>
+                    <div class="panel-body">
+                        <ul class="media-list" ng-repeat="message in messages| filter:{isImportant: 'true'}" ng-class="(message.isImportant == true) ? 'success' : ''">
+
+                            <li class="media">
+
+                                <div class="media-body">
+
+                                    <div class="media">
+                                        <a class="pull-left" href="#">
+                                            <img height="50px" width="50px" class="media-object img-circle " src="https://optionsplayers.com{{message.authorAvatarUrl}}" />
+                                        </a>
+                                        <div class="media-body">
+                                            <span ng-bind-html="message.message" style="font-size: 2em;"></span>
+                                            <br />
+                                            <medium class="text-muted">{{ message.authorName }} | {{ message.createdSince }} | <img height="20px" width="20px" src="/images/star.png" data="{{message.id}}" ng-click="markFavorite(message.id, true)" ng-hide="message.is_favorite">
+                                                <img height="20px" width="20px" src="/images/favoritesOn.png" data="{{message.id}}" ng-click="markFavorite(message.id, false)" ng-hide="!message.is_favorite">  </medium>
+                                            <hr />
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             <div id="favoriteList" class="tab-pane fade">
-                <div class="col-lg-10">
-                    <table class="table table-striped">
-                        <tr ng-repeat="message in favoriteMessageList" ng-class="(message.isImportant == true) ? 'success' : ''" >
-                            <td ng-sanitize>
 
-                                <img width="50" height="50" src="https://optionsplayers.com{{message.authorAvatarUrl}}">
-                                <br>
-                                {{ message.authorName }}
-                            </td>
-                            <td valign="center" ng-bind-html="message.message"> </td>
-                            <td valign="center" >
-                                {{ message.createdAt }}
-                            </td>
-                        </tr>
-                    </table>
+                <div id="mainChatWindow" class="panel panel-info" style="height: 1000px;overflow:auto;">
+                    <div class="panel-heading">
+                       Favorited Messages
+                    </div>
+                    <div class="panel-body">
+                        <ul class="media-list" ng-repeat="message in favoriteMessageList" ng-class="(message.isImportant == true) ? 'success' : ''">
+
+                            <li class="media">
+
+                                <div class="media-body">
+
+                                    <div class="media">
+                                        <a class="pull-left" href="#">
+                                            <img height="50px" width="50px" class="media-object img-circle " src="https://optionsplayers.com{{message.authorAvatarUrl}}" />
+                                        </a>
+                                        <div class="media-body">
+                                            <span ng-bind-html="message.message" style="font-size: 2em;"></span>
+                                            <br />
+                                            <medium class="text-muted">{{ message.authorName }} | {{ message.createdSince }} | <img height="20px" width="20px" src="/images/star.png" data="{{message.id}}" ng-click="markFavorite(message.id, true)" ng-hide="message.is_favorite">
+                                                <img height="20px" width="20px" src="/images/favoritesOn.png" data="{{message.id}}" ng-click="markFavorite(message.id, false)" ng-hide="!message.is_favorite">  </medium>
+                                            <hr />
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             <div id="stockMentions" class="tab-pane fade">
@@ -201,10 +231,12 @@
 
     mainApp.controller('messageController',['$scope', '$http', function($scope, $http) {
         $scope.messages = <%- JSON.stringify(messages) %>;
+        $scope.userList = [];
         $scope.favoritePersonIdlist = <%- JSON.stringify(favoritePersonIdlist) %>;
         $scope.favoriteMessageList = <%- JSON.stringify(favoriteMessageList) %>;
         $scope.stockMentionsList = <%- JSON.stringify(stockMentionsList) %>;
         $scope.shouldSendNotification = true;
+        $scope.smsEnabled = true;
 
         $scope.decodeHTML = function(html){
             console.log("Decoding html " + html);
@@ -213,18 +245,41 @@
             console.log('decorder returning' + txt.value);
             return txt.value;
         }
-        $scope.userList = ['john'];
+
+        $scope.toggleSmsSettings = function(){
+
+            $scope.smsEnabled = false;
+
+            $http({
+                method: 'GET',
+                url: '/sms/toggle'
+            }).then(function successCallback(response) {
+                console.log('Finished toggling sms setting');
+                console.log(response.data);
+                $scope.smsEnabled = response.data.value;
+                // this callback will be called asynchronously
+                // when the response is available
+            }, function errorCallback(response) {
+                alert('couldnt toggle sms settings');
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
+            });
+        }
+
         console.log("Gonna subscribe to new messages!");
         io.socket.get('/messages/subscribe', function(data, jwr) {
             console.log("Subscribed to new messages");
             console.log(data);
 
-            io.socket.on('userlist', function(newMessage) {
-                alert('new user list!');
+            io.socket.on('userList', function(dataPayload) {
                 console.log("Received updated users list");
-                console.log(newMessage);
-                $scope.messages.push(newMessage);
-                $scope.$apply();
+                console.log(dataPayload);
+
+                if((dataPayload.A && dataPayload.A[0])) {
+                    console.log(dataPayload.A[0]);
+                    $scope.userList = dataPayload.A[0];
+                    $scope.$apply();
+                }
             });
             io.socket.on('add', function(newMessage) {
                 console.log("Received new message");
@@ -239,6 +294,12 @@
                 $scope.messages.push(newMessage);
                 $scope.$apply();
                 //$("#mainChatWindow").animate({ scrollTop: $('#mainChatWindow').prop("scrollHeight")}, 0);
+            });
+
+            io.socket.on('error', function(err){
+                alert('Socket error');
+                console.log(err);
+
             });
         });
 
